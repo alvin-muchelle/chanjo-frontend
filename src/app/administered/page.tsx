@@ -9,7 +9,7 @@ import { ProfileResponse, Baby } from "@/types";
 
 export const dynamic = "force-dynamic"; 
 
-const API_BASE = <process className="env NEXT_BACKEND_URL"></process>;
+const API_BASE = process.env.NEXT_BACKEND_URL 
 
 export default function AdministeredPage() {
   return (

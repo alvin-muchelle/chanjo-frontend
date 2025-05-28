@@ -198,7 +198,7 @@ export function AddBabyForm({
                       <Calendar
                         mode="single"
                         selected={localDob ? new Date(localDob) : undefined}
-                        onSelect={(day) => {
+                        onSelect={(day: Date | undefined) => {
                           if (!day) return;
                           const iso = formatLocalDate(day);
                           field.onChange(iso);
