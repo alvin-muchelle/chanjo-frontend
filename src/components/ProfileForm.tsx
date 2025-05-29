@@ -20,6 +20,13 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
@@ -255,14 +262,19 @@ export function ProfileForm({
               <FormItem>
                 <FormLabel>Gender</FormLabel>
                 <FormControl>
-                  <select
-                    className="border rounded px-2 py-1 w-full"
-                    {...field}
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    defaultValue="Male"
                   >
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male">Male</SelectItem>
+                      <SelectItem value="Female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage />
               </FormItem>

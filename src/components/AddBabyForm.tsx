@@ -220,7 +220,7 @@ export function AddBabyForm({
             )}
           />
 
-          {/* Gender (now using themed <Select> so it respects light/dark mode) */}
+          {/* Gender */}
           <FormField
             control={form.control}
             name="gender"
