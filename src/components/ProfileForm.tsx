@@ -116,7 +116,7 @@ export function ProfileForm({
         return;
       }
 
-      // We expect the server to return { message: "...", baby: { babyId, babyName, dateOfBirth, gender } }
+      // expect the server to return { message: "...", baby: { babyId, babyName, dateOfBirth, gender } }
       const newBaby = data.baby;
       if (!newBaby?.babyId) {
         console.error("No babyId returned from /api/profile");
@@ -135,7 +135,6 @@ export function ProfileForm({
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          // no body needed; the server will (a) set administered=[], (b) scan past vaccines
         }
       );
 
@@ -210,42 +209,50 @@ export function ProfileForm({
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
-                <FormControl>
-                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal text-muted-foreground border-primary"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {localDob || "Select date of birth"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-2 space-y-2" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={localDob ? new Date(localDob) : undefined}
-                        onSelect={(day: Date | undefined) => {
-                          if (!day) return;
-                          const iso = formatLocalDate(day);
-                          field.onChange(iso);
-                          setLocalDob(iso);
-                          setPopoverOpen(false);
-                        }}
-                        disabled={{
-                          before: new Date(minDate),
-                          after: new Date(maxDate),
-                        }}
-                        fromMonth={new Date(minDate)}
-                        toMonth={new Date(maxDate)}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth</FormLabel>
+                    <FormControl>
+                      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal text-muted-foreground border-primary"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {localDob || "Select date of birth"}
+                          </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-auto p-2" align="start">
+                          <Calendar
+                            mode="single"
+                            defaultMonth={new Date(minDate)}
+                            selected={localDob ? new Date(localDob) : undefined}
+                            onSelect={(day: Date | undefined) => {
+                              if (!day) return;
+                              const iso = formatLocalDate(day);
+                              field.onChange(iso);
+                              setLocalDob(iso);
+                              setPopoverOpen(false);
+                            }}
+                            disabled={{
+                              before: new Date(minDate),
+                              after: new Date(maxDate),
+                            }}
+                            fromMonth={new Date(minDate)}
+                            toMonth={new Date(maxDate)}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
           />
 
