@@ -70,8 +70,7 @@ export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
 
   return (
     <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-xl font-bold text-center mb-4">Sign Up</h2>
-
+      <h1 className="text-xl font-bold text-center mb-4">Sign Up</h1>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSendEmail)}
