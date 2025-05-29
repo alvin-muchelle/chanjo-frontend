@@ -41,7 +41,8 @@ export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
 
   const handleSendEmail = async (values: z.infer<typeof emailSchema>) => {
     setSending(true);
-    setMessage(""); // clear previous
+    setMessage("");
+    console.log("API_BASE is:", API_BASE);
     try {
       const res = await fetch(`${API_BASE}/api/signup`, {
         method: "POST",
