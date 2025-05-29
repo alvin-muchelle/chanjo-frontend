@@ -8,6 +8,12 @@ export default function LoginPage() {
 
   return (
     <div>
+      <h1 className="text-2xl font-bold mt-6 mb-4 text-center">
+        Welcome to Chanjo Chonjo!
+      </h1>
+      <h2 className="text-2xl font-semibold mt-6 mb-4 text-center">
+        An app that assists you track your babies' vaccinations
+      </h2>
       <LoginForm
         onLoginSuccess={(token: string, mustReset: boolean) => {
           localStorage.setItem("authToken", token);

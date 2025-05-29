@@ -9,9 +9,6 @@ export default function SignUpPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mt-6 mb-4 text-center">
-        Welcome to Chanjo Chonjo!
-      </h1>
       <SignUpForm
         onSignupSuccess={(t) => {
           // Store the temp token in localStorage
