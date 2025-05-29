@@ -11,7 +11,7 @@ export function ModeTogglePositioner() {
     pathname === "/dashboard" || pathname.startsWith("/administered");
 
   // use top-20 on deep pages; otherwise top-5
-  const topClass = isDeepPage ? "top-20" : "top-5";
+  const topClass = isDeepPage ? "top-20" : "top-3";
 
   return (
     <div className={`fixed ${topClass} left-6 z-50`}>
