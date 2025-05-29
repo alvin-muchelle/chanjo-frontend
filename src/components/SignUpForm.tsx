@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const API_BASE = <process className="env NEXT_PUBLIC_BACKEND_URL!"></process>;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email"),
