@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-const API_BASE = process.env.NEXT_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -32,6 +32,7 @@ interface Props {
 export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [messageType, setMessageType] = useState<"error" | "success">("error");
 
   const form = useForm<z.infer<typeof emailSchema>>({
     resolver: zodResolver(emailSchema),
@@ -40,8 +41,7 @@ export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
 
   const handleSendEmail = async (values: z.infer<typeof emailSchema>) => {
     setSending(true);
-    setMessage("");
-
+    setMessage(""); // clear previous
     try {
       const res = await fetch(`${API_BASE}/api/signup`, {
         method: "POST",
@@ -51,13 +51,17 @@ export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
 
       const data = await res.json();
       if (res.ok) {
+        setMessageType("success");
         setMessage("Temporary password sent. Check your email.");
         onSignupSuccess(data.token);
       } else {
-        setMessage(data.message || "Signup failed.");
+        setMessageType("error");
+        // your API sometimes returns data.message or data.error
+        setMessage(data.message || data.error || "Signup failed.");
       }
     } catch (err) {
       console.error(err);
+      setMessageType("error");
       setMessage("Error sending email.");
     } finally {
       setSending(false);
@@ -96,7 +100,14 @@ export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
       </Form>
 
       {message && (
-        <p className="mt-4 text-center text-sm text-green-600">{message}</p>
+        <p
+          className={
+            `mt-4 text-center text-sm ` +
+            (messageType === "error" ? "text-red-600" : "text-green-600")
+          }
+        >
+          {message}
+        </p>
       )}
 
       <p className="mt-4 text-center text-sm">

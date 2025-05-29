@@ -21,7 +21,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 
-const API_BASE = process.env.NEXT_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),

@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
-const API_BASE = process.env.NEXT_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 // Each “administered” entry is expected to look like:
 // { vaccine: string, date: string }

@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 // Pull in the backend URL from my env
-const API_BASE = process.env.NEXT_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),

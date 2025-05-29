@@ -34,7 +34,7 @@ import {
 import { Vaccination } from "./Columns";
 
 // Note: We’ll POST to this URL whenever a vaccine is checked off
-const API_BASE = process.env.NEXT_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 interface PendingProps {
   columns: ColumnDef<Vaccination, unknown>[];
