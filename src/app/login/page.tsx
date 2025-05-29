@@ -12,7 +12,7 @@ export default function LoginPage() {
         Welcome to Chanjo Chonjo!
       </h1>
       <h2 className="text-2xl font-semibold mt-6 mb-4 text-center">
-        An app that assists you track your babies' vaccinations
+        An app that assists you track your babies&apos; vaccinations
       </h2>
       <LoginForm
         onLoginSuccess={(token: string, mustReset: boolean) => {
