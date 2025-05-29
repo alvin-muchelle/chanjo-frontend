@@ -1,7 +1,10 @@
-import { useState } from "react"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+// src/components/LoginForm.tsx
+"use client";
+
+import { useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -9,55 +12,61 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-// Pull in the backend URL from my env
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+// Pull in the backend URL from your environment
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
 const loginSchema = z.object({
   email: z.string().email("Enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-})
+});
 
 interface Props {
-  onLoginSuccess: (token: string, mustReset: boolean) => void
-  onSwitchToSignup: () => void
+  onLoginSuccess: (token: string, mustReset: boolean) => void;
+  onSwitchToSignup: () => void;
 }
 
 export function LoginForm({ onLoginSuccess, onSwitchToSignup }: Props) {
-  const [errorMsg, setErrorMsg] = useState("")
+  const [errorMsg, setErrorMsg] = useState("");
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
-  })
+  });
 
   const handleLogin = async (values: z.infer<typeof loginSchema>) => {
-    setErrorMsg("")
+    setErrorMsg("");
     try {
       const res = await fetch(`${API_BASE}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
-      })
-      const data = await res.json()
+      });
+      const data = await res.json();
+
       if (res.ok) {
-        onLoginSuccess(data.token, data.mustReset)
-        localStorage.setItem("authToken", data.token)
+        // We expect the server to return something like:
+        // { token: "...", mustResetPassword: false, userId: "...", ... }
+        const mustReset: boolean = data.mustResetPassword ?? false;
+        onLoginSuccess(data.token, mustReset);
+
+        // Optionally store the token now or let the parent do it
+        localStorage.setItem("authToken", data.token);
       } else {
-        setErrorMsg(data.error || "Login failed")
+        setErrorMsg(data.error || "Login failed");
       }
-    } catch {
-      setErrorMsg("Network error")
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Network error");
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto mt-10">
-      <div>
-        <h1 className="text-xl font-bold mb-4 text-center">Log In</h1>
-      </div>
+      <h1 className="text-xl font-bold mb-4 text-center">Log In</h1>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleLogin)} className="space-y-4">
           <FormField
@@ -88,21 +97,25 @@ export function LoginForm({ onLoginSuccess, onSwitchToSignup }: Props) {
             )}
           />
 
-          <Button type="submit" className="w-full">Log In</Button>
+          <Button type="submit" className="w-full">
+            Log In
+          </Button>
         </form>
       </Form>
 
       <div className="mt-4 text-center">
-        <Button 
-          variant="link" 
+        <Button
+          variant="link"
           onClick={onSwitchToSignup}
           className="text-sm"
         >
-          Don&apos;t have an account? Sign up
+          Don’t have an account? Sign up
         </Button>
       </div>
 
-      {errorMsg && <p className="mt-4 text-red-600 text-sm text-center">{errorMsg}</p>}
+      {errorMsg && (
+        <p className="mt-4 text-red-600 text-sm text-center">{errorMsg}</p>
+      )}
     </div>
-  )
+  );
 }

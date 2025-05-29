@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 // Pull in the backend URL from my env
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
 const resetSchema = z
   .object({

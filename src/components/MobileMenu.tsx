@@ -31,7 +31,7 @@ interface MobileMenuProps {
   authToken: string | null;
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   menuOpen,
