@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             {/* 4) Push page contents down by at least “pt-5” so that on non-dashboard pages
                   the toggle (top-5) doesn’t overlap. On /dashboard or /administered, the toggle
                   is top-20, so this padding still works. */}
-            <div className="pt-5 px-6 max-w-5xl mx-auto">{children}</div>
+            <div className="pt-6 px-6 max-w-5xl mx-auto">{children}</div>
           </CustomThemeProvider>
         </NextThemesProvider>
       </body>
