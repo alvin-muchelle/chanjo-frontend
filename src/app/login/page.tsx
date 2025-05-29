@@ -11,9 +11,9 @@ export default function LoginPage() {
       <h1 className="text-2xl font-bold mt-6 mb-4 text-center">
         Welcome to Chanjo Chonjo!
       </h1>
-      <h2 className="text-2xl font-semibold mt-6 mb-4 text-center">
-        An app that assists you track your babies&apos; vaccinations
-      </h2>
+      <h3 className="text-2xl font-semibold mt-6 mb-4 text-center">
+        Track your babies&apos; vaccinations with ease
+      </h3>
       <LoginForm
         onLoginSuccess={(token: string, mustReset: boolean) => {
           localStorage.setItem("authToken", token);
