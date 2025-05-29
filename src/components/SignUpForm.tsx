@@ -70,7 +70,7 @@ export function SignUpForm({ onSignupSuccess, onSwitchToLogin }: Props) {
 
   return (
     <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-xl font-semibold mb-4">Sign Up</h2>
+      <h2 className="text-xl font-bold text-center mb-4">Sign Up</h2>
 
       <Form {...form}>
         <form
