@@ -27,7 +27,7 @@ export default function AddBabyPage() {
     if (!authToken) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_BACKEND_URL}/api/profile`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/profile`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       if (!res.ok) throw new Error("Failed to refresh profile");

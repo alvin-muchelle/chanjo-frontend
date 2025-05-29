@@ -275,7 +275,8 @@ export function Pending({
                         : "border border-primary";
 
                       return (
-                        <TableCell key={cell.id} className={`${baseClasses} ${borderClass}`}>                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        <TableCell key={cell.id} className={`${baseClasses} ${borderClass}`}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       );
                     })}

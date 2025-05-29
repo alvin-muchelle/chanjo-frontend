@@ -12,7 +12,7 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic"; 
 
-const API_BASE = process.env.NEXT_BACKEND_URL;
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function DashboardPage() {
   return (
