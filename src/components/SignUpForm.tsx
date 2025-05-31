@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
 const emailSchema = z.object({
-  email: z.string().email("Invalid. Enter a valid email"),
+  email: z.string().email("Invalid. Please enter a valid email"),
 });
 
 interface Props {
