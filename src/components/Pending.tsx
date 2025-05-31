@@ -232,7 +232,7 @@ export function Pending({
   // (10) Build the table from pendingSchedule
   const table = useReactTable({
     columns: allColumns,
-    data:adminLoading ? [] : pendingSchedule,
+    data: pendingSchedule,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
