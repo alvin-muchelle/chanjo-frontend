@@ -56,7 +56,7 @@ export function Pending({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
-  const [adminLoading, setAdminLoading] = useState(true);
+  const [pendingLoading, setPendingLoading] = useState(true);
 
   // (1) Keep track of birthDate locally
   const [birthDate, setBirthDate] = useState<string>(initialBirthDate ?? "");
@@ -86,7 +86,7 @@ export function Pending({
   useEffect(() => {
     if (!babyId || !authToken) return;
 
-    setAdminLoading(true);
+    setPendingLoading(true);
 
     fetch(`${API_BASE}/api/baby/${babyId}/administered`, {
       headers: { Authorization: `Bearer ${authToken}` },
@@ -105,7 +105,7 @@ export function Pending({
         console.error("Failed to load administered from server:", err);
       })
       .finally(() => {
-        setAdminLoading(false);
+        setPendingLoading(false);
       });
   }, [babyId, authToken]);
 
@@ -217,7 +217,11 @@ export function Pending({
 
   return (
     <div>
-     (
+      {pendingLoading ? (
+        <div className="text-center text-sm text-muted-foreground mb-4">
+          <p>Loading administered data…</p>
+        </div>
+      ) : (
         <>
           {/* Search bar */}
           <div className="flex items-center justify-between py-4 gap-4">
@@ -304,7 +308,7 @@ export function Pending({
             </div>
           </div>
         </>
-      )
+      )}
     </div>
   );
 }

@@ -144,7 +144,6 @@ function DashboardPageContent() {
   };
 
   if (!profile) return <p>Loading profile…</p>;
-  if (loadingSchedule) return <p>Loading Schedule…</p>;
 
   // Flatten out `profile.babies`
   const babiesList: Baby[] = profile.babies;
