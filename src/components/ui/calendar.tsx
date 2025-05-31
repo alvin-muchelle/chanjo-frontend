@@ -19,8 +19,6 @@ function CustomCaption(props: CaptionProps) {
   const { displayMonth } = props
   const { goToMonth } = useNavigation()
 
-  const [showYearList, setShowYearList] = React.useState(false)
-
   const displayedYear = displayMonth.getFullYear()
   const displayedMonthIndex = displayMonth.getMonth()
 
@@ -42,21 +40,19 @@ function CustomCaption(props: CaptionProps) {
     "December",
   ]
 
-  const toggleYearList = () => setShowYearList((v) => !v)
-
-  const selectYear = (year: number) => {
-    setShowYearList(false)
-    goToMonth(new Date(year, displayedMonthIndex, 1))
-  }
-
   const handleMonthChange = (monthValue: string) => {
     const newMonthIndex = parseInt(monthValue, 10)
     goToMonth(new Date(displayedYear, newMonthIndex, 1))
   }
 
+  const handleYearChange = (yearValue: string) => {
+    const newYear = parseInt(yearValue, 10)
+    goToMonth(new Date(newYear, displayedMonthIndex, 1))
+  }
+
   return (
     <div className="w-full flex items-center py-1 gap-2">
-      {/* Month dropdown (shadcn Select) */}
+      {/* Month dropdown */}
       <Select
         value={displayedMonthIndex.toString()}
         onValueChange={handleMonthChange}
@@ -73,39 +69,22 @@ function CustomCaption(props: CaptionProps) {
         </SelectContent>
       </Select>
 
-      {/* Year button */}
-      <button
-        type="button"
-        onClick={toggleYearList}
-        className={cn(
-          buttonVariants({ variant: "outline" }),
-          "px-2 py-1 text-sm"
-        )}
+      {/* Year dropdown */}
+      <Select
+        value={displayedYear.toString()}
+        onValueChange={handleYearChange}
       >
-        {displayedYear}
-      </button>
-      
-      {/* Year list, vertical */}
-      {showYearList && (
-        <div className="flex flex-col bg-background border rounded shadow-md p-1 gap-1">
+        <SelectTrigger className="w-[100px]">
+          <SelectValue placeholder="Year" />
+        </SelectTrigger>
+        <SelectContent>
           {years.map((yr) => (
-            <button
-              key={yr}
-              type="button"
-              className={cn(
-                buttonVariants({ variant: "ghost" }),
-                "text-sm px-2 py-1 rounded",
-                yr === displayedYear
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )}
-              onClick={() => selectYear(yr)}
-            >
+            <SelectItem key={yr} value={yr.toString()}>
               {yr}
-            </button>
+            </SelectItem>
           ))}
-        </div>
-      )}
+        </SelectContent>
+      </Select>
     </div>
   )
 }
@@ -165,7 +144,7 @@ function Calendar({
         ),
       }}
       {...props}
-    />
+    />~
   )
 }
 
