@@ -1,7 +1,7 @@
 // src/components/AddBabyForm.tsx
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { z } from "zod";
@@ -39,32 +39,25 @@ const babySchema = z.object({
 
 type BabyFormValues = z.infer<typeof babySchema>;
 
-export function AddBabyForm({
-  token,
-  onSuccess,
-}: {
-  token: string;
-  onSuccess: () => void;
-}) {
+export function AddBabyForm({ token }: { token: string }) {
   const router = useRouter();
 
   //----------------------------------------------------------------
   // 1) Set up React Hook Form with explicit generic BabyFormValues.
-  //    Note: defaultValues.gender is now "Male" instead of "".
   //----------------------------------------------------------------
   const form = useForm<BabyFormValues>({
     resolver: zodResolver(babySchema),
     defaultValues: {
       babyName: "",
       dateOfBirth: "",
-      gender: "Male", // must be either "Male" or "Female"
+      gender: "Male",
     },
   });
 
   //----------------------------------------------------------------
   // 2) Compute min/max for the date-picker once
   //----------------------------------------------------------------
-  const { minDate, maxDate } = useMemo(() => {
+  const { minDate, maxDate } = (() => {
     const today = new Date();
 
     // max = today + 7 days
@@ -84,15 +77,14 @@ export function AddBabyForm({
     const min = `${minY}-${minM}-${minD}`;
 
     return { minDate: min, maxDate: max };
-  }, []);
+  })();
 
   //----------------------------------------------------------------
-  // 3) Local state for the date-popover
+  // 3) Local state for date popover
   //----------------------------------------------------------------
   const [localDob, setLocalDob] = useState<string>("");
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  // Keep localDob in sync with form’s dateOfBirth
   useEffect(() => {
     const formDob = form.getValues("dateOfBirth");
     if (formDob !== localDob) {
@@ -145,8 +137,8 @@ export function AddBabyForm({
         },
       });
 
-      // Notify parent that we succeeded
-      onSuccess();
+      // (C) Redirect to dashboard with the new babyId in the URL
+      router.push(`/dashboard?babyId=${newBabyId}`);
     } catch (err) {
       console.error("AddBabyForm error:", err);
     }
