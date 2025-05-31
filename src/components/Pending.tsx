@@ -56,6 +56,7 @@ export function Pending({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
+  const [adminLoading, setAdminLoading] = useState(true);
 
   // (1) Keep track of birthDate locally
   const [birthDate, setBirthDate] = useState<string>(initialBirthDate ?? "");
@@ -85,6 +86,8 @@ export function Pending({
   useEffect(() => {
     if (!babyId || !authToken) return;
 
+    setAdminLoading(true); // start loading
+
     fetch(`${API_BASE}/api/baby/${babyId}/administered`, {
       headers: { Authorization: `Bearer ${authToken}` },
     })
@@ -93,21 +96,22 @@ export function Pending({
         return r.json();
       })
       .then((json: { administered: { vaccine: string; date: string }[] }) => {
-        // Map each { vaccine, date } → { vaccine, date_to_be_administered: date }
-        // Other Vaccination properties (age, protection_against) are not needed for merging/filtering;
-        // cast to Vaccination[] to satisfy TS.
         const mapped = json.administered.map((item) =>
-          ({
-            vaccine: item.vaccine,
-            date_to_be_administered: item.date,
-          } as Vaccination)
+        ({
+          vaccine: item.vaccine,
+          date_to_be_administered: item.date,
+        } as Vaccination)
         );
         setServerAdministered(mapped);
       })
       .catch((err) => {
         console.error("Failed to load administered from server:", err);
+      })
+      .finally(() => {
+        setAdminLoading(false); // loading done
       });
   }, [babyId, authToken]);
+
 
   // (4) Build administeredList by merging:
   //   • any auto‐past‐due items from fullSchedule (date < today)
@@ -224,6 +228,10 @@ export function Pending({
   useEffect(() => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   }, [babyId]);
+
+   if (adminLoading) {
+    return <div className="text-muted-foreground text-sm">Loading schedule...</div>;
+  }
 
   // (10) Build the table from pendingSchedule
   const table = useReactTable({
