@@ -39,11 +39,17 @@ const babySchema = z.object({
 
 type BabyFormValues = z.infer<typeof babySchema>;
 
-export function AddBabyForm({ token }: { token: string }) {
+export function AddBabyForm({
+  token,
+  onSuccess,
+}: {
+  token: string;
+  onSuccess: () => void;
+}) {
   const router = useRouter();
 
   //----------------------------------------------------------------
-  // 1) Set up React Hook Form with explicit generic BabyFormValues.
+  // 1) Set up React Hook Form
   //----------------------------------------------------------------
   const form = useForm<BabyFormValues>({
     resolver: zodResolver(babySchema),
@@ -55,7 +61,7 @@ export function AddBabyForm({ token }: { token: string }) {
   });
 
   //----------------------------------------------------------------
-  // 2) Compute min/max for the date-picker once
+  // 2) Compute min/max for the date‐picker
   //----------------------------------------------------------------
   const { minDate, maxDate } = (() => {
     const today = new Date();
@@ -137,8 +143,11 @@ export function AddBabyForm({ token }: { token: string }) {
         },
       });
 
-      // (C) Redirect to dashboard with the new babyId in the URL
+      // (C) Redirect to dashboard with new babyId in URL
       router.push(`/dashboard?babyId=${newBabyId}`);
+
+      // Notify parent that we succeeded
+      onSuccess();
     } catch (err) {
       console.error("AddBabyForm error:", err);
     }
@@ -220,11 +229,7 @@ export function AddBabyForm({ token }: { token: string }) {
               <FormItem>
                 <FormLabel>Gender</FormLabel>
                 <FormControl>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue="Male"
-                  >
+                  <Select onValueChange={field.onChange} value={field.value} defaultValue="Male">
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select gender" />
                     </SelectTrigger>
@@ -241,12 +246,7 @@ export function AddBabyForm({ token }: { token: string }) {
 
           <div className="flex justify-end gap-2">
             {/* Cancel → go back to /dashboard */}
-            <Button
-              variant="outline"
-              onClick={() => {
-                router.push("/dashboard");
-              }}
-            >
+            <Button variant="outline" onClick={() => router.push("/dashboard")}>
               Cancel
             </Button>
 
