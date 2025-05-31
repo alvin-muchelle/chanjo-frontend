@@ -219,7 +219,7 @@ export function Pending({
     <div>
       {pendingLoading ? (
         <div className="text-center text-sm text-muted-foreground mb-4">
-          <p>Loading administered data…</p>
+          <p>Loading pending vaccinations...</p>
         </div>
       ) : (
         <>
