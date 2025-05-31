@@ -22,8 +22,8 @@ function CustomCaption(props: CaptionProps) {
   const displayedYear = displayMonth.getFullYear()
   const displayedMonthIndex = displayMonth.getMonth()
 
-  // Build years: displayedYear - 3 ... displayedYear + 1
-  const years = Array.from({ length: 5 }, (_, i) => displayedYear - 3 + i)
+  // Build years: displayedYear - 2 ... displayedYear + 1
+  const years = Array.from({ length: 5 }, (_, i) => displayedYear - 2 + i)
 
   const months = [
     "January",
