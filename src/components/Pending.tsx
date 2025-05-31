@@ -51,11 +51,11 @@ export function Pending({
   babyId,
   authToken,
 }: PendingProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 });
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [adminLoading, setAdminLoading] = useState(true);
 
   // (1) Keep track of birthDate locally
@@ -65,7 +65,7 @@ export function Pending({
   }, [initialBirthDate]);
 
   // (2) Turn birthDate → actual schedule
-  const parsedBirthDate = React.useMemo(
+  const parsedBirthDate = useMemo(
     () => (birthDate ? new Date(birthDate) : null),
     [birthDate]
   );
@@ -75,18 +75,18 @@ export function Pending({
   );
 
   // (3) Compute “today” at midnight
-  const today = React.useMemo(() => {
+  const today = useMemo(() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
     return t;
   }, []);
 
-  // *** Fetch server‐side administered list on mount or babyId change ***
+  // (4) Fetch server‐side administered list on mount or babyId change
   const [serverAdministered, setServerAdministered] = useState<Vaccination[]>([]);
   useEffect(() => {
     if (!babyId || !authToken) return;
 
-    setAdminLoading(true); // start loading
+    setAdminLoading(true);
 
     fetch(`${API_BASE}/api/baby/${babyId}/administered`, {
       headers: { Authorization: `Bearer ${authToken}` },
@@ -97,10 +97,7 @@ export function Pending({
       })
       .then((json: { administered: { vaccine: string; date: string }[] }) => {
         const mapped = json.administered.map((item) =>
-          ({
-            vaccine: item.vaccine,
-            date_to_be_administered: item.date,
-          } as Vaccination)
+          ({ vaccine: item.vaccine, date_to_be_administered: item.date } as Vaccination)
         );
         setServerAdministered(mapped);
       })
@@ -108,23 +105,19 @@ export function Pending({
         console.error("Failed to load administered from server:", err);
       })
       .finally(() => {
-        setAdminLoading(false); // loading done
+        setAdminLoading(false);
       });
   }, [babyId, authToken]);
 
-  // (4) Build administeredList by merging:
-  //   • any auto‐past‐due items from fullSchedule (date < today)
-  //   • items fetched from the server (serverAdministered)
+  // (5) Build administeredList by merging auto-past-due + serverAdministered
   const [administeredList, setAdministeredList] = useState<Vaccination[]>([]);
   useEffect(() => {
-    // (a) autoPast = fullSchedule items where date_to_be_administered < today
     const autoPast = fullSchedule.filter((item) => {
       if (!item.date_to_be_administered) return false;
       const d = new Date(item.date_to_be_administered + "T00:00:00Z");
       return d < today;
     });
 
-    // (b) Merge autoPast + serverAdministered without duplicates
     const keyOf = (v: Vaccination) => v.vaccine + "|" + v.date_to_be_administered;
     const map = new Map<string, Vaccination>();
     autoPast.forEach((v) => map.set(keyOf(v), v));
@@ -133,7 +126,7 @@ export function Pending({
     setAdministeredList(Array.from(map.values()));
   }, [fullSchedule, serverAdministered, today]);
 
-  // (5) Build pendingSchedule = fullSchedule items where date >= today and not in administeredList
+  // (6) Build pendingSchedule
   const pendingSchedule = useMemo(() => {
     const administeredKeys = new Set(
       administeredList.map((v) => v.vaccine + "|" + v.date_to_be_administered)
@@ -145,43 +138,31 @@ export function Pending({
     });
   }, [fullSchedule, administeredList, today]);
 
-  // (6) When user checks a row off, update local state AND POST to server
+  // (7) markAsAdministered
   const markAsAdministered = async (row: Vaccination) => {
     setAdministeredList((prev) => [...prev, row]);
-
     if (!babyId) return;
     try {
       await fetch(`${API_BASE}/api/baby/${babyId}/administered/mark`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          vaccine: row.vaccine,
-          date: row.date_to_be_administered,
-          type: "manual",
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` },
+        body: JSON.stringify({ vaccine: row.vaccine, date: row.date_to_be_administered, type: "manual" }),
       });
-      // Also add to serverAdministered so it persists
       setServerAdministered((prev) => [...prev, row]);
     } catch (err) {
       console.error("Failed to persist administered:", err);
     }
   };
 
-  // (7) “Administered” checkbox column
-  const administeredColumn = React.useMemo<ColumnDef<Vaccination, unknown>>(
+  // (8) Administered column
+  const administeredColumn = useMemo<ColumnDef<Vaccination, unknown>>(
     () => ({
       id: "administered",
       header: "Administered",
       cell: ({ row }) => {
         const original = row.original;
         const key = original.vaccine + "|" + original.date_to_be_administered;
-        const already = administeredList.some(
-          (v) => v.vaccine + "|" + v.date_to_be_administered === key
-        );
-
+        const already = administeredList.some((v) => key === v.vaccine + "|" + v.date_to_be_administered);
         const vaccDate = original.date_to_be_administered
           ? new Date(original.date_to_be_administered + "T00:00:00Z")
           : null;
@@ -198,41 +179,28 @@ export function Pending({
                   disabled={already || isFuture}
                   onChange={() => markAsAdministered(original)}
                   className="disabled:cursor-not-allowed h-4 w-4"
-                  aria-disabled={already || isFuture}
                 />
               </div>
             </TooltipTrigger>
-            {isFuture && (
-              <TooltipContent>
-                <span>Not allowed yet</span>
-              </TooltipContent>
-            )}
+            {isFuture && <TooltipContent><span>Not allowed yet</span></TooltipContent>}
           </Tooltip>
         );
       },
-      size: 30,
-      minSize: 30,
-      maxSize: 50,
+      size: 30, minSize: 30, maxSize: 50,
     }),
     [administeredList, today, markAsAdministered]
   );
 
-  // (8) Combine base columns with “Administered”
-  const allColumns = useMemo(() => [...baseColumns, administeredColumn], [
-    baseColumns,
-    administeredColumn,
-  ]);
+  // (9) Combine columns
+  const allColumns = useMemo(() => [...baseColumns, administeredColumn], [baseColumns, administeredColumn]);
 
-  // (9) Reset pagination whenever babyId changes
-  useEffect(() => {
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, [babyId]);
+  // (10) Reset pagination
+  useEffect(() => { setPagination((p) => ({ ...p, pageIndex: 0 })); }, [babyId]);
 
-  // (10) Build the table from pendingSchedule,
-  //       but render no rows until adminLoading is false
+  // (11) Build table (always, but data is only shown after loading)
   const table = useReactTable({
     columns: allColumns,
-    data: adminLoading ? [] : pendingSchedule,
+    data: pendingSchedule,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
@@ -249,115 +217,98 @@ export function Pending({
 
   return (
     <div>
-      {/* Show loading indicator while fetching administered */}
-      {adminLoading && (
-        <div className="text-center text-sm text-muted-foreground mb-2">
+      {adminLoading ? (
+        <div className="text-center text-sm text-muted-foreground mb-4">
           Loading administered data…
         </div>
-      )}
+      ) : (
+        <>
+          {/* Search bar */}
+          <div className="flex items-center justify-between py-4 gap-4">
+            <Input
+              placeholder="Search for a vaccine"
+              value={(table.getColumn("vaccine")?.getFilterValue() as string) ?? ""}
+              onChange={(e) => table.getColumn("vaccine")?.setFilterValue(e.target.value)}
+              className="max-w-sm border-primary"
+            />
+          </div>
 
-      {/* Search bar */}
-      <div className="flex items-center justify-between py-4 gap-4">
-        <Input
-          placeholder="Search for a vaccine"
-          value={(table.getColumn("vaccine")?.getFilterValue() as string) ?? ""}
-          onChange={(e) => table.getColumn("vaccine")?.setFilterValue(e.target.value)}
-          className="max-w-sm border-primary"
-        />
-      </div>
-
-      {/* Table container */}
-      <div className="w-full rounded-md border border-primary">
-        <Table className="w-full">
-          <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="relative border border-primary px-2 py-1 truncate whitespace-nowrap overflow-hidden text-ellipsis"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                    <ColumnResizer header={header} />
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row, rowIndex, allRows) => {
-                const currentAge = row.getValue("age");
-                const prevAge = rowIndex > 0 ? allRows[rowIndex - 1].getValue("age") : null;
-                const isFirstOfAgeGroup = currentAge !== prevAge;
-
-                return (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                    {row.getVisibleCells().map((cell) => {
-                      const isAgeCell = cell.column.id === "age";
-                      const baseClasses =
-                        "truncate whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1";
-
-                      const borderClass = isAgeCell
-                        ? isFirstOfAgeGroup
-                          ? "border-t border-primary"
-                          : "border-none"
-                        : "border border-primary";
-
-                      return (
-                        <TableCell key={cell.id} className={`${baseClasses} ${borderClass}`}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      );
-                    })}
+          {/* Table container */}
+          <div className="w-full rounded-md border border-primary">
+            <Table className="w-full">
+              <TableHeader>
+                {table.getHeaderGroups().map((hg) => (
+                  <TableRow key={hg.id}>
+                    {hg.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className="relative border border-primary px-2 py-1 truncate whitespace-nowrap overflow-hidden text-ellipsis"
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                        <ColumnResizer header={header} />
+                      </TableHead>
+                    ))}
                   </TableRow>
-                );
-              })
-            ) : (
-              <TableRow>
-                <TableCell colSpan={allColumns.length} className="h-24 text-center">
-                  No upcoming vaccinations.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length ? (
+                  table.getRowModel().rows.map((row, rowIndex, allRows) => {
+                    const currentAge = row.getValue("age");
+                    const prevAge = rowIndex > 0 ? allRows[rowIndex - 1].getValue("age") : null;
+                    const isFirstOfAgeGroup = currentAge !== prevAge;
 
-      {/* Footnote & pagination */}
-      <div className="mb-5">
-        <div className="py-4 text-sm text-muted-foreground">
-          <p>
-            <strong>* Rotavirus 3rd dose alternate schedule</strong>
-          </p>
-          <p>
-            <strong>** Vitamin A is given every 6 months up to 5 years and during lactation</strong>
-          </p>
-          <p>
-            <strong>*** One Dose Annually</strong>
-          </p>
-        </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
+                    return (
+                      <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                        {row.getVisibleCells().map((cell) => {
+                          const isAgeCell = cell.column.id === "age";
+                          const baseClasses = "truncate whitespace-nowrap overflow-hidden text-ellipsis px-2 py-1";
+                          const borderClass = isAgeCell
+                            ? isFirstOfAgeGroup
+                              ? "border-t border-primary"
+                              : "border-none"
+                            : "border border-primary";
+
+                          return (
+                            <TableCell key={cell.id} className={`${baseClasses} ${borderClass}`}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={allColumns.length} className="h-24 text-center">
+                      No upcoming vaccinations.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Footnote & pagination */}
+          <div className="mb-5">
+            <div className="py-4 text-sm text-muted-foreground">
+              <p><strong>* Rotavirus 3rd dose alternate schedule</strong></p>
+              <p><strong>** Vitamin A is given every 6 months up to 5 years and during lactation</strong></p>
+              <p><strong>*** One Dose Annually</strong></p>
+            </div>
+            <div className="flex items-center justify-end space-x-2 py-4">
+              <Button variant="outline" size="sm" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
