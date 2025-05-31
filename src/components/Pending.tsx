@@ -217,11 +217,7 @@ export function Pending({
 
   return (
     <div>
-      {adminLoading ? (
-        <div className="text-center text-sm text-muted-foreground mb-4">
-          Loading administered data…
-        </div>
-      ) : (
+     (
         <>
           {/* Search bar */}
           <div className="flex items-center justify-between py-4 gap-4">
@@ -308,7 +304,7 @@ export function Pending({
             </div>
           </div>
         </>
-      )}
+      )
     </div>
   );
 }
