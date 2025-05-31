@@ -229,14 +229,10 @@ export function Pending({
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   }, [babyId]);
 
-   if (adminLoading) {
-    return <div className="text-muted-foreground text-sm">Loading schedule...</div>;
-  }
-
   // (10) Build the table from pendingSchedule
   const table = useReactTable({
     columns: allColumns,
-    data: pendingSchedule,
+    data:adminLoading ? [] : pendingSchedule,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
