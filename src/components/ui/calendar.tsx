@@ -5,9 +5,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker, CaptionProps, useNavigation } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
 import { buttonVariants } from "@/components/ui/button"
 
-// CustomCaption now uses useNavigation instead of onMonthChange from CaptionProps
+// CustomCaption: uses useNavigation.goToMonth instead of onMonthChange
 function CustomCaption(props: CaptionProps) {
   const { displayMonth } = props
   const { goToMonth } = useNavigation()
@@ -35,7 +42,6 @@ function CustomCaption(props: CaptionProps) {
     "December",
   ]
 
-  // Handlers
   const toggleYearList = () => setShowYearList((v) => !v)
 
   const selectYear = (year: number) => {
@@ -43,44 +49,52 @@ function CustomCaption(props: CaptionProps) {
     goToMonth(new Date(year, displayedMonthIndex, 1))
   }
 
-  const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newMonthIndex = parseInt(e.target.value, 10)
+  const handleMonthChange = (monthValue: string) => {
+    const newMonthIndex = parseInt(monthValue, 10)
     goToMonth(new Date(displayedYear, newMonthIndex, 1))
   }
 
   return (
-    <div className="w-full flex flex-col items-center py-1 gap-2">
-      {/* Year label (button) */}
+    <div className="w-full flex items-center py-1 gap-2">
+      {/* Year button */}
       <button
         type="button"
         onClick={toggleYearList}
-        className="px-2 py-1 text-sm rounded bg-transparent hover:bg-accent hover:text-accent-foreground"
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "px-2 py-1 text-sm"
+        )}
       >
         {displayedYear}
       </button>
 
-      {/* Month dropdown */}
-      <select
-        value={displayedMonthIndex}
-        onChange={handleMonthChange}
-        className="border rounded px-2 py-1 text-sm"
+      {/* Month dropdown (shadcn Select) */}
+      <Select
+        value={displayedMonthIndex.toString()}
+        onValueChange={handleMonthChange}
       >
-        {months.map((m, idx) => (
-          <option key={idx} value={idx}>
-            {m}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="w-[120px]">
+          <SelectValue placeholder="Month" />
+        </SelectTrigger>
+        <SelectContent>
+          {months.map((m, idx) => (
+            <SelectItem key={idx} value={idx.toString()}>
+              {m}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      {/* Year list dropdown */}
+      {/* Year list, horizontal */}
       {showYearList && (
-        <div className="flex flex-col items-center bg-background border rounded shadow-md p-1">
+        <div className="flex flex-row bg-background border rounded shadow-md p-1 gap-1">
           {years.map((yr) => (
             <button
               key={yr}
               type="button"
               className={cn(
-                "w-full text-sm px-2 py-1 rounded text-left",
+                buttonVariants({ variant: "ghost" }),
+                "text-sm px-2 py-1 rounded",
                 yr === displayedYear
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-accent hover:text-accent-foreground"
@@ -92,7 +106,6 @@ function CustomCaption(props: CaptionProps) {
           ))}
         </div>
       )}
-
     </div>
   )
 }
@@ -111,6 +124,7 @@ function Calendar({
         months: "flex flex-col sm:flex-row gap-2",
         month: "flex flex-col gap-4",
         caption: "w-full",
+        nav: "hidden",
         table: "w-full border-collapse space-x-1",
         head_row: "flex",
         head_cell:
