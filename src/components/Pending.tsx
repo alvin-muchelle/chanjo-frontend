@@ -97,10 +97,10 @@ export function Pending({
       })
       .then((json: { administered: { vaccine: string; date: string }[] }) => {
         const mapped = json.administered.map((item) =>
-        ({
-          vaccine: item.vaccine,
-          date_to_be_administered: item.date,
-        } as Vaccination)
+          ({
+            vaccine: item.vaccine,
+            date_to_be_administered: item.date,
+          } as Vaccination)
         );
         setServerAdministered(mapped);
       })
@@ -111,7 +111,6 @@ export function Pending({
         setAdminLoading(false); // loading done
       });
   }, [babyId, authToken]);
-
 
   // (4) Build administeredList by merging:
   //   • any auto‐past‐due items from fullSchedule (date < today)
@@ -229,7 +228,8 @@ export function Pending({
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   }, [babyId]);
 
-  // (10) Build the table from pendingSchedule
+  // (10) Build the table from pendingSchedule,
+  //       but render no rows until adminLoading is false
   const table = useReactTable({
     columns: allColumns,
     data: adminLoading ? [] : pendingSchedule,
@@ -249,6 +249,13 @@ export function Pending({
 
   return (
     <div>
+      {/* Show loading indicator while fetching administered */}
+      {adminLoading && (
+        <div className="text-center text-sm text-muted-foreground mb-2">
+          Loading administered data…
+        </div>
+      )}
+
       {/* Search bar */}
       <div className="flex items-center justify-between py-4 gap-4">
         <Input
