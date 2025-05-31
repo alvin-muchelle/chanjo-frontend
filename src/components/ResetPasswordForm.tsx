@@ -123,7 +123,16 @@ export function ResetPasswordForm({ token, onResetComplete }: ResetPasswordFormP
         </form>
       </Form>
 
-      {message && <p className="mt-4 text-center text-sm text-red-600">{message}</p>}
+      {message && (
+        <p
+          className={`mt-4 text-center text-sm ${message === "Password reset successful. Please log in."
+              ? "text-green-600"
+              : "text-red-600"
+            }`}
+        >
+          {message}
+        </p>
+      )}
     </div>
   )
 }
