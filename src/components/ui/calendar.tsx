@@ -56,18 +56,6 @@ function CustomCaption(props: CaptionProps) {
 
   return (
     <div className="w-full flex items-center py-1 gap-2">
-      {/* Year button */}
-      <button
-        type="button"
-        onClick={toggleYearList}
-        className={cn(
-          buttonVariants({ variant: "outline" }),
-          "px-2 py-1 text-sm"
-        )}
-      >
-        {displayedYear}
-      </button>
-
       {/* Month dropdown (shadcn Select) */}
       <Select
         value={displayedMonthIndex.toString()}
@@ -85,9 +73,21 @@ function CustomCaption(props: CaptionProps) {
         </SelectContent>
       </Select>
 
-      {/* Year list, horizontal */}
+      {/* Year button */}
+      <button
+        type="button"
+        onClick={toggleYearList}
+        className={cn(
+          buttonVariants({ variant: "outline" }),
+          "px-2 py-1 text-sm"
+        )}
+      >
+        {displayedYear}
+      </button>
+      
+      {/* Year list, vertical */}
       {showYearList && (
-        <div className="flex flex-row bg-background border rounded shadow-md p-1 gap-1">
+        <div className="flex flex-col bg-background border rounded shadow-md p-1 gap-1">
           {years.map((yr) => (
             <button
               key={yr}
