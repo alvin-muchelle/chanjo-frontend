@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/table";
 import { Vaccination } from "./Columns";
 
-// Note: We’ll POST to this URL whenever a vaccine is checked off
+// Base URL for API calls
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL!;
 
 interface PendingProps {
@@ -73,14 +73,14 @@ export function Pending({
     [data, parsedBirthDate]
   );
 
-  // (3) Split into “administered” vs. “pending”
+  // (3) Compute “today” at midnight
   const today = React.useMemo(() => {
     const t = new Date();
     t.setHours(0, 0, 0, 0);
     return t;
   }, []);
 
-  // **NEW**: Fetch the server‐side “already administered” list on mount or babyId change
+  // *** Fetch server‐side administered list on mount or babyId change ***
   const [serverAdministered, setServerAdministered] = useState<Vaccination[]>([]);
   useEffect(() => {
     if (!babyId || !authToken) return;
@@ -92,27 +92,36 @@ export function Pending({
         if (!r.ok) throw new Error();
         return r.json();
       })
-      .then((json: { administered: Vaccination[] }) => {
-        setServerAdministered(json.administered);
+      .then((json: { administered: { vaccine: string; date: string }[] }) => {
+        // Map each { vaccine, date } → { vaccine, date_to_be_administered: date }
+        // Other Vaccination properties (age, protection_against) are not needed for merging/filtering;
+        // cast to Vaccination[] to satisfy TS.
+        const mapped = json.administered.map((item) =>
+          ({
+            vaccine: item.vaccine,
+            date_to_be_administered: item.date,
+          } as Vaccination)
+        );
+        setServerAdministered(mapped);
       })
       .catch((err) => {
         console.error("Failed to load administered from server:", err);
-        // Optionally, show a toast warning
       });
   }, [babyId, authToken]);
 
-  // initially mark anything in the past as “administered” + merge in server‐side administered
+  // (4) Build administeredList by merging:
+  //   • any auto‐past‐due items from fullSchedule (date < today)
+  //   • items fetched from the server (serverAdministered)
   const [administeredList, setAdministeredList] = useState<Vaccination[]>([]);
-
   useEffect(() => {
-    // (a) “Automatically past‐due” items:
+    // (a) autoPast = fullSchedule items where date_to_be_administered < today
     const autoPast = fullSchedule.filter((item) => {
       if (!item.date_to_be_administered) return false;
       const d = new Date(item.date_to_be_administered + "T00:00:00Z");
       return d < today;
     });
 
-    // (b) Merge serverAdministered (no duplicates)
+    // (b) Merge autoPast + serverAdministered without duplicates
     const keyOf = (v: Vaccination) => v.vaccine + "|" + v.date_to_be_administered;
     const map = new Map<string, Vaccination>();
     autoPast.forEach((v) => map.set(keyOf(v), v));
@@ -121,7 +130,7 @@ export function Pending({
     setAdministeredList(Array.from(map.values()));
   }, [fullSchedule, serverAdministered, today]);
 
-  // (4) Build pendingSchedule = those ≥ today and not in administeredList
+  // (5) Build pendingSchedule = fullSchedule items where date >= today and not in administeredList
   const pendingSchedule = useMemo(() => {
     const administeredKeys = new Set(
       administeredList.map((v) => v.vaccine + "|" + v.date_to_be_administered)
@@ -133,7 +142,7 @@ export function Pending({
     });
   }, [fullSchedule, administeredList, today]);
 
-  // (5) When user checks a row off, update local state AND POST to server
+  // (6) When user checks a row off, update local state AND POST to server
   const markAsAdministered = async (row: Vaccination) => {
     setAdministeredList((prev) => [...prev, row]);
 
@@ -151,14 +160,14 @@ export function Pending({
           type: "manual",
         }),
       });
-      // Also add to serverAdministered so it persists when component remounts
+      // Also add to serverAdministered so it persists
       setServerAdministered((prev) => [...prev, row]);
     } catch (err) {
       console.error("Failed to persist administered:", err);
     }
   };
 
-  // (6) “Administered” checkbox column
+  // (7) “Administered” checkbox column
   const administeredColumn = React.useMemo<ColumnDef<Vaccination, unknown>>(
     () => ({
       id: "administered",
@@ -205,18 +214,18 @@ export function Pending({
     [administeredList, today, markAsAdministered]
   );
 
-  // (7) Combine the passed‐in columns with our new “Administered” column
+  // (8) Combine base columns with “Administered”
   const allColumns = useMemo(() => [...baseColumns, administeredColumn], [
     baseColumns,
     administeredColumn,
   ]);
 
-  // (8) Whenever babyId changes, reset pagination
+  // (9) Reset pagination whenever babyId changes
   useEffect(() => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
   }, [babyId]);
 
-  // (9) Build the table from pendingSchedule
+  // (10) Build the table from pendingSchedule
   const table = useReactTable({
     columns: allColumns,
     data: pendingSchedule,
@@ -306,7 +315,7 @@ export function Pending({
         </Table>
       </div>
 
-      {/* Footnote & pagination buttons */}
+      {/* Footnote & pagination */}
       <div className="mb-5">
         <div className="py-4 text-sm text-muted-foreground">
           <p>
@@ -319,7 +328,7 @@ export function Pending({
             <strong>*** One Dose Annually</strong>
           </p>
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4 ">
+        <div className="flex items-center justify-end space-x-2 py-4">
           <Button
             variant="outline"
             size="sm"

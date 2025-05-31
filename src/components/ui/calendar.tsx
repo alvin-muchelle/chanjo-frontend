@@ -59,6 +59,19 @@ function CustomCaption(props: CaptionProps) {
         {displayedYear}
       </button>
 
+      {/* Month dropdown */}
+      <select
+        value={displayedMonthIndex}
+        onChange={handleMonthChange}
+        className="border rounded px-2 py-1 text-sm"
+      >
+        {months.map((m, idx) => (
+          <option key={idx} value={idx}>
+            {m}
+          </option>
+        ))}
+      </select>
+
       {/* Year list dropdown */}
       {showYearList && (
         <div className="flex flex-col items-center bg-background border rounded shadow-md p-1">
@@ -80,18 +93,6 @@ function CustomCaption(props: CaptionProps) {
         </div>
       )}
 
-      {/* Month dropdown */}
-      <select
-        value={displayedMonthIndex}
-        onChange={handleMonthChange}
-        className="border rounded px-2 py-1 text-sm"
-      >
-        {months.map((m, idx) => (
-          <option key={idx} value={idx}>
-            {m}
-          </option>
-        ))}
-      </select>
     </div>
   )
 }
@@ -110,7 +111,6 @@ function Calendar({
         months: "flex flex-col sm:flex-row gap-2",
         month: "flex flex-col gap-4",
         caption: "w-full",
-        nav: "hidden", // hide default chevrons
         table: "w-full border-collapse space-x-1",
         head_row: "flex",
         head_cell:
