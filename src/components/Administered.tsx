@@ -4,6 +4,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ColumnResizer } from "./ColumnResizer";
+import { Input } from "@/components/ui/input";
 import {
   ColumnDef,
   SortingState,
@@ -124,15 +125,13 @@ export function Administered({ babyId, authToken }: AdministeredProps) {
     <div>
       {/* Search bar: filter by vaccine name */}
       <div className="flex items-center justify-between py-4 gap-4">
-        <input
-          type="text"
+        <Input
           placeholder="Search for a vaccine"
           value={(table.getColumn("vaccine")?.getFilterValue() as string) ?? ""}
           onChange={(e) => table.getColumn("vaccine")?.setFilterValue(e.target.value)}
-          className="max-w-sm border border-primary px-2 py-1 rounded"
+          className="max-w-sm border-primary"
         />
       </div>
-
       {/* Table container */}
       <div className="overflow-x-auto w-full rounded-md border border-primary">
         <Table className="min-w-full table-fixed">

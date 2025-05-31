@@ -80,36 +80,48 @@ export function Pending({
     return t;
   }, []);
 
-  // initially mark anything in the past as “administered”
-  const [administeredList, setAdministeredList] = useState<Vaccination[]>(() =>
-    fullSchedule.filter((item) => {
-      if (!item.date_to_be_administered) return false;
-      const d = new Date(item.date_to_be_administered + "T00:00:00Z");
-      return d < today;
-    })
-  );
-
-  // whenever the full schedule changes (e.g. DOB edit), add any newly‐past‐due items
+  // **NEW**: Fetch the server‐side “already administered” list on mount or babyId change
+  const [serverAdministered, setServerAdministered] = useState<Vaccination[]>([]);
   useEffect(() => {
-    const newlyAdministered = fullSchedule.filter((item) => {
+    if (!babyId || !authToken) return;
+
+    fetch(`${API_BASE}/api/baby/${babyId}/administered`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json();
+      })
+      .then((json: { administered: Vaccination[] }) => {
+        setServerAdministered(json.administered);
+      })
+      .catch((err) => {
+        console.error("Failed to load administered from server:", err);
+        // Optionally, show a toast warning
+      });
+  }, [babyId, authToken]);
+
+  // initially mark anything in the past as “administered” + merge in server‐side administered
+  const [administeredList, setAdministeredList] = useState<Vaccination[]>([]);
+
+  useEffect(() => {
+    // (a) “Automatically past‐due” items:
+    const autoPast = fullSchedule.filter((item) => {
       if (!item.date_to_be_administered) return false;
       const d = new Date(item.date_to_be_administered + "T00:00:00Z");
       return d < today;
     });
 
-    const prevKeys = new Set(
-      administeredList.map((v) => v.vaccine + "|" + v.date_to_be_administered)
-    );
-    const additions = newlyAdministered.filter(
-      (v) => !prevKeys.has(v.vaccine + "|" + v.date_to_be_administered)
-    );
+    // (b) Merge serverAdministered (no duplicates)
+    const keyOf = (v: Vaccination) => v.vaccine + "|" + v.date_to_be_administered;
+    const map = new Map<string, Vaccination>();
+    autoPast.forEach((v) => map.set(keyOf(v), v));
+    serverAdministered.forEach((v) => map.set(keyOf(v), v));
 
-    if (additions.length > 0) {
-      setAdministeredList((prev) => [...prev, ...additions]);
-    }
-  }, [fullSchedule, administeredList, today]);
+    setAdministeredList(Array.from(map.values()));
+  }, [fullSchedule, serverAdministered, today]);
 
-  // (4) Build pendingSchedule = those ≥ today and not yet in administeredList
+  // (4) Build pendingSchedule = those ≥ today and not in administeredList
   const pendingSchedule = useMemo(() => {
     const administeredKeys = new Set(
       administeredList.map((v) => v.vaccine + "|" + v.date_to_be_administered)
@@ -121,7 +133,7 @@ export function Pending({
     });
   }, [fullSchedule, administeredList, today]);
 
-  // (5) When user checks a row off, we both update local state AND POST to our new endpoint
+  // (5) When user checks a row off, update local state AND POST to server
   const markAsAdministered = async (row: Vaccination) => {
     setAdministeredList((prev) => [...prev, row]);
 
@@ -139,6 +151,8 @@ export function Pending({
           type: "manual",
         }),
       });
+      // Also add to serverAdministered so it persists when component remounts
+      setServerAdministered((prev) => [...prev, row]);
     } catch (err) {
       console.error("Failed to persist administered:", err);
     }
@@ -188,10 +202,8 @@ export function Pending({
       minSize: 30,
       maxSize: 50,
     }),
-    // added `markAsAdministered` here
     [administeredList, today, markAsAdministered]
   );
-
 
   // (7) Combine the passed‐in columns with our new “Administered” column
   const allColumns = useMemo(() => [...baseColumns, administeredColumn], [
