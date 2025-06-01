@@ -8,7 +8,7 @@ export function ModeTogglePositioner() {
   const pathname = usePathname();
   // if we’re on /dashboard or anything under /administered → push toggle down
   const isDeepPage =
-    pathname === "/dashboard" || pathname.startsWith("/administered");
+    pathname === "/dashboard";
 
   // use top-20 on deep pages; otherwise top-5
   const topClass = isDeepPage ? "top-20" : "top-3";
