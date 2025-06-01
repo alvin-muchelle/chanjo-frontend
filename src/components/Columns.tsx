@@ -1,5 +1,4 @@
 // src/components/Columns.tsx
-
 import { ColumnDef } from "@tanstack/react-table"
 import { FilterIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -20,19 +19,25 @@ export const Columns: ColumnDef<Vaccination>[] = [
     size: 30,
     minSize: 30,
     maxSize: 100,
-    // Only render "age" text for the first row of each age group
     cell: ({ row, table }) => {
+      // 1) Guard: if React Table passed an invalid row stub, bail out
+      if (!row || !row.original || !table) return null
+
       const idx = row.index
       const rows = table.getRowModel().rows
       const currentAge = row.original.age
-      const prevAge = idx > 0 ? rows[idx - 1].original.age : null
+      const prevAge = idx > 0 ? rows[idx - 1]?.original.age : null
+
       return prevAge === currentAge ? null : <span>{currentAge}</span>
     },
     filterFn: (row, columnId, filterValue: string[]) => {
-      return filterValue.includes(row.getValue(columnId))
+      // Guard again (although filterFn usually won't be called if no data)
+      const original = row.original as Vaccination | undefined
+      if (!original) return false
+      return filterValue.includes(original.age)
     },
     header: ({ column, table }) => {
-      const data = table.getPreFilteredRowModel().rows.map(row => row.original)
+      const data = table.getPreFilteredRowModel().rows.map(r => r.original).filter(Boolean) as Vaccination[]
       const uniqueAges = Array.from(new Set(data.map(v => v.age)))
       const selected = (column.getFilterValue() as string[]) ?? []
 
@@ -40,9 +45,8 @@ export const Columns: ColumnDef<Vaccination>[] = [
         const updated = selected.includes(age)
           ? selected.filter(a => a !== age)
           : [...selected, age]
-      
         column.setFilterValue(updated.length > 0 ? updated : undefined)
-      }      
+      }
 
       return (
         <Popover>
@@ -52,6 +56,7 @@ export const Columns: ColumnDef<Vaccination>[] = [
               <FilterIcon className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
+
           <PopoverContent
             className="w-56 space-y-2 p-4 max-h-72 overflow-y-auto"
             align="start"
@@ -85,39 +90,40 @@ export const Columns: ColumnDef<Vaccination>[] = [
       )
     },
     sortingFn: (rowA, rowB) => {
+      // Guard: if rowA.original or rowB.original is missing, we treat them as equal
+      const ageA = (rowA.original as Vaccination | undefined)?.age
+      const ageB = (rowB.original as Vaccination | undefined)?.age
+      if (!ageA || !ageB) return 0
+
       const orderValue = (age: string): number => {
         if (age.toLowerCase() === "birth") return 0
-    
         const unitWeights: Record<string, number> = {
-          "week": 1,
-          "weeks": 1,
-          "month": 4,
-          "months": 4,
-          "year": 52,
-          "years": 52,
+          week: 1,
+          weeks: 1,
+          month: 4,
+          months: 4,
+          year: 52,
+          years: 52,
         }
-    
         const rangeRegex = /^(\d+)[–-](\d+)\s*(\w+)/
         const singleRegex = /^(\d+)\s*(\w+)/
-    
+
         const rangeMatch = age.match(rangeRegex)
         if (rangeMatch) {
           const [, start, end, unit] = rangeMatch
-          const startVal = parseInt(start) * (unitWeights[unit.toLowerCase()] || 1000)
-          const endVal = parseInt(end) * (unitWeights[unit.toLowerCase()] || 1000)
+          const startVal = parseInt(start, 10) * (unitWeights[unit.toLowerCase()] || 1000)
+          const endVal = parseInt(end, 10) * (unitWeights[unit.toLowerCase()] || 1000)
           return (startVal + endVal) / 2
         }
-    
         const singleMatch = age.match(singleRegex)
         if (singleMatch) {
           const [, num, unit] = singleMatch
-          return parseInt(num) * (unitWeights[unit.toLowerCase()] || 1000)
+          return parseInt(num, 10) * (unitWeights[unit.toLowerCase()] || 1000)
         }
-    
         return 9999
       }
-    
-      return orderValue(rowA.getValue("age")) - orderValue(rowB.getValue("age"))
+
+      return orderValue(ageA) - orderValue(ageB)
     }
   },
 
@@ -126,7 +132,11 @@ export const Columns: ColumnDef<Vaccination>[] = [
     header: "Vaccine",
     size: 70,
     minSize: 70,
-    maxSize: 100
+    maxSize: 100,
+    cell: ({ row }) => {
+      if (!row || !row.original) return null
+      return <span>{(row.original as Vaccination).vaccine}</span>
+    }
   },
 
   {
@@ -134,14 +144,13 @@ export const Columns: ColumnDef<Vaccination>[] = [
     header: "Protection Against",
     minSize: 200,
     cell: ({ row }) => {
-      const value = row.getValue("protection_against")
-      if (typeof value !== "string") return null
-  
+      if (!row || !row.original) return null
+      const value = (row.original as Vaccination).protection_against
       const items = value.split(", ")
       return items.length > 1 ? (
         <ul className="list-disc list-inside text-left">
-          {items.map((item, index) => (
-            <li key={index}>{item}</li>
+          {items.map((item, idx) => (
+            <li key={idx}>{item}</li>
           ))}
         </ul>
       ) : (
@@ -149,10 +158,14 @@ export const Columns: ColumnDef<Vaccination>[] = [
       )
     }
   },
-  
+
   {
     accessorKey: "date_to_be_administered",
     header: "Date to be Administered",
-    cell: ({ row }) => formatDateWithOrdinal(row.getValue("date_to_be_administered"))
+    cell: ({ row }) => {
+      if (!row || !row.original) return null
+      const rawDate = (row.original as Vaccination).date_to_be_administered ?? ""
+      return <span>{formatDateWithOrdinal(rawDate)}</span>
+    }
   }
 ]
