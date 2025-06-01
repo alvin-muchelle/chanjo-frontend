@@ -75,7 +75,7 @@ export default function AdministeredPageContent() {
   }, [babyIdFromQuery, router]);
 
   if (loading || !profile) {
-    return <p>Loading…</p>;
+    return;
   }
 
   // Flatten babies
