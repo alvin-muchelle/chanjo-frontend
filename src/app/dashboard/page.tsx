@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Navbar } from "@/components/Navbar";
@@ -16,9 +16,7 @@ const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="pt-16 px-4">Loading...</div>}>
       <DashboardPageContent />
-    </Suspense>
   );
 }
 
